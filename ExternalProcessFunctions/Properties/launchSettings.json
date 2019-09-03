@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "ExternalProcessFunctions": {
+      "commandName": "Project"
+    }
+  }
+}
