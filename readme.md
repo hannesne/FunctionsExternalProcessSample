@@ -1,4 +1,4 @@
-# Running an External Process with Azure Functions
+# Running an external process (exe) with Azure Functions
 
 This sample shows running an exe from a functions project. It shows concepts such as redirecting output, and running the executable from a temporary location.
 
