@@ -8,15 +8,15 @@ namespace ExternalProcessFunctions.Services
         private readonly string executableSourcePath;
         private readonly string workingDirectoryPath;
         private readonly string arguments;
-        private readonly bool readOutput;
+        private readonly bool redirectIo;
 
         public ExternalProcessManager(string arguments,
-            TemporaryStorageManager temporaryStorageManager, bool readOutput = true)
+            TemporaryStorageManager temporaryStorageManager, bool redirectIO = true)
         {
             executableSourcePath = temporaryStorageManager.CreateFilePath("ExternalApp.exe");
             workingDirectoryPath = temporaryStorageManager.TemporaryDirectoryPath;
             this.arguments = arguments;
-            this.readOutput = readOutput;
+            this.redirectIo = redirectIO;
         }
 
         public ProcessRunResult RunProcess()
@@ -30,16 +30,16 @@ namespace ExternalProcessFunctions.Services
                     WorkingDirectory = workingDirectoryPath,
                     Arguments = arguments,
                     UseShellExecute = false,
-                    RedirectStandardOutput = readOutput,
-                    RedirectStandardError = readOutput,
-                    RedirectStandardInput = readOutput
+                    RedirectStandardOutput = redirectIo,
+                    RedirectStandardError = redirectIo,
+                    RedirectStandardInput = redirectIo
                 }
             };
             process.Start();
 
             string processOutputStream = string.Empty;
             string processErrorStream = string.Empty;
-            if (readOutput)
+            if (redirectIo)
             {
                 processOutputStream = process.StandardOutput.ReadToEnd();
                 processErrorStream = process.StandardError.ReadToEnd();
