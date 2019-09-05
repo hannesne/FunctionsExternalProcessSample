@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 
@@ -21,7 +22,10 @@ namespace ExternalProcessFunctions.Services
 
         public ProcessRunResult RunProcess()
         {
-
+            if (!File.Exists(executableSourcePath))
+                throw new ExternalProcessExecutableDoesNotExist(executableSourcePath);
+            if (!Directory.Exists(workingDirectoryPath))
+                throw new ExternalProcessWorkingDirectoryDoesNotExist(workingDirectoryPath);
             Process process = new Process
             {
                 StartInfo =
@@ -47,6 +51,22 @@ namespace ExternalProcessFunctions.Services
             process.WaitForExit();
 
             return new ProcessRunResult(processOutputStream, processErrorStream, process.ExitCode);
+        }
+    }
+
+    public class ExternalProcessWorkingDirectoryDoesNotExist : Exception
+    {
+        public ExternalProcessWorkingDirectoryDoesNotExist(string path) : base($"The working directory could not be found at {path}.")
+        {
+            
+        }
+    }
+
+    public class ExternalProcessExecutableDoesNotExist : Exception
+    {
+        public ExternalProcessExecutableDoesNotExist(string path) : base($"The external executable could not be found at {path}.")
+        {
+            
         }
     }
 }
