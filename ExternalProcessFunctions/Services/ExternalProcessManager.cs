@@ -4,24 +4,41 @@ using System.IO;
 
 namespace ExternalProcessFunctions.Services
 {
-    public class ExternalProcessManager
+    public class ExternalProcessManager : IExternalProcessManager
     {
         private readonly string executableSourcePath;
         private readonly string workingDirectoryPath;
-        private readonly string arguments;
-        private readonly bool redirectIo;
+        private string arguments;
+        private bool redirectIo;
+        private readonly ITemporaryStorageManager temporaryStorageManager;
+        private readonly IEnvironmentManager environmentManager;
 
-        public ExternalProcessManager(string arguments,
-            TemporaryStorageManager temporaryStorageManager, bool redirectIO = true)
+        public ExternalProcessManager(ITemporaryStorageManager temporaryStorageManager,
+            IEnvironmentManager environmentManager)
         {
             executableSourcePath = temporaryStorageManager.CreateFilePath("ExternalApp.exe");
             workingDirectoryPath = temporaryStorageManager.TemporaryDirectoryPath;
+            this.temporaryStorageManager = temporaryStorageManager;
+            this.environmentManager = environmentManager;
+        }
+
+        public void Initialize(string baseDirectoryPath, string arguments, bool redirectIO = true)
+        {
+            string architecture = environmentManager.Is64Bit ? "x64" : "Win32";
+            string dependencyPath = Path.Combine(baseDirectoryPath, "DependencyExe", architecture);
+
+            if (!Directory.Exists(dependencyPath))
+                throw new DependencyPathDoesNotExistException(dependencyPath);
+            
+            temporaryStorageManager.CopyFolderContentsToTemporaryDirectory(dependencyPath);
+
             this.arguments = arguments;
             this.redirectIo = redirectIO;
         }
 
         public ProcessRunResult RunProcess()
         {
+
             if (!File.Exists(executableSourcePath))
                 throw new ExternalProcessExecutableDoesNotExist(executableSourcePath);
             if (!Directory.Exists(workingDirectoryPath))
@@ -51,6 +68,14 @@ namespace ExternalProcessFunctions.Services
             process.WaitForExit();
 
             return new ProcessRunResult(processOutputStream, processErrorStream, process.ExitCode);
+        }
+    }
+
+    public class DependencyPathDoesNotExistException : Exception
+    {
+        public DependencyPathDoesNotExistException(string path) : base ($"The dependency path could not be found at {path}.")
+        {
+            
         }
     }
 
